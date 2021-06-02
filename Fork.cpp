@@ -7,7 +7,9 @@
 #include <sys/shm.h>
 #include <time.h> 
 
-#define KEY 1  
+#define KEY 123  
+#define TAMANHO 10
+#define INDICE 5000
 //********************************************************************************************************************
    pid_t pid;
    clock_t t;
@@ -32,19 +34,19 @@
    	int quantidade;
    };
 	
-	//Estrutura dos anos de publica��o
+	//Estrutura dos anos de publicacao
    struct anos{
    	char year [6];
    };
 	
-	//Estrutura dos livros publixados
+	//Estrutura dos livros publicados
    struct publicados{
 		char tituloPublicado [47];
       struct anos vetorAnos[100]; 
       int contadorAnos;
    };
 	
-	//Estrutura dos anos e numero de edi��o dos livros
+	//Estrutura dos anos e numero de edicao dos livros
    struct edicao{
    	char ano[6];
    	int numeroEdicoes;
@@ -55,14 +57,14 @@
     struct livro* separaLivros(){
 		 //struct livro vetorLivros;
 		 struct livro* vetorLivros;
-		 //vetorLivros = malloc (2000001 sizeof (struct livro)); //alocar memoria para um vetor de livros
-		 vetorLivros = malloc (sizeof (struct livro)); 
+		 vetorLivros = malloc (TAMANHO * sizeof (struct livro)); //alocar memoria para um vetor de livros
+		 //vetorLivros = malloc (sizeof (struct livro)); 
 		
 		//Le o arquivo original
 		 FILE *pFile;
 		 pFile = fopen ("livros2.txt", "r" );
 
-		while (k< 2000000){
+		while (k< TAMANHO){
 			fgets(linhaAtual,95, pFile);   	
 			strcpy(linhaAtual,strtok(linhaAtual, "\n"));
 			token = strtok(linhaAtual, s); 
@@ -71,7 +73,7 @@
 			strcpy(vetorLivros[k].codigo, token );
 			token = strtok (NULL, s);
 			
-			//colocar o t�tulo do livro
+			//T	itulo
 			strcpy(vetorLivros[k].titulo, token );
 			token = strtok(NULL, s);
 		
@@ -80,11 +82,11 @@
 			token = strtok (NULL, s);
 
 		
-			//colocar edi��o
+			//Edicao
 			strcpy(vetorLivros[k].edicao, token );
 			token = strtok (NULL, s);
 		
-			//colocar ano
+			//Ano
 			strcpy(vetorLivros[k].ano, token );
 			token = strtok (NULL, s);		 
 		k=k+1;
@@ -93,7 +95,7 @@
    
    return vetorLivros;
    }
-  //*************************************************************************FIM SEPARAcAO**********************************************************************//
+  //*************************************************************************FIM SEPARACAO**********************************************************************//
 
   
   //******************************************************************SEPARACAO DOS AUTORES********************************************************************//
@@ -131,18 +133,18 @@
    void filtraLivros(struct livro *vetorLivrosRecebido){
 		struct livro *vetorLivros = vetorLivrosRecebido;
       struct  publicados *livrosPublicados;
-      shmid = shmget(key, 2000000 * sizeof(struct livro), IPC_CREAT | 0600 );
+      shmid = shmget(key, TAMANHO * sizeof(struct livro), IPC_CREAT | 0600 );
       livrosPublicados = shmat(shmid, 0, 0); 
       pWrite = fopen ("livrosPublicados.txt", "w"); 
       int flag = 0;
       
-		for (k=0; k<100000; k++){
+		for (k=0; k<TAMANHO; k++){
          livrosPublicados[k].contadorAnos = 0;
       }
        
       novoItem = 0;
 	   
-		for (k=0; k<100000;k++){
+		for (k=0; k<TAMANHO;k++){
 	   
 	   	for (j = 0; j<k; j++){
 	   	
@@ -174,7 +176,7 @@
 		     }
 	   }
 	         
-		for (k = 0; k < 100000; k++){
+		for (k = 0; k < TAMANHO; k++){
 			fprintf (pWrite, "Titulo: %s\n", livrosPublicados[k].tituloPublicado);
 		   fprintf (pWrite, "Publicaoes por ano:\n");
 			
@@ -196,15 +198,15 @@
 		 
 		pWrite = fopen ("edicoes.txt", "w"); 
 		struct  edicao *vetorEdicoes;
-		shmid = shmget(key, 2000000 * sizeof(struct livro), IPC_CREAT | 0600 );
+		shmid = shmget(key, TAMANHO * sizeof(struct livro), IPC_CREAT | 0700 );
 		vetorEdicoes = shmat(shmid, 0, 0); 
 			 
-		for (k=0; k<100000; k++){
+		for (k=0; k<TAMANHO; k++){
 			vetorEdicoes[k].numeroEdicoes = 0;
 		}
 		
 		novoItem = 0;
-		for (k=0; k<100000;k++){
+		for (k=0; k<TAMANHO;k++){
 			
 			for (j = 0; j<k; j++){
 				
@@ -222,13 +224,13 @@
 		   }
 		}
 					
-		for (k = 0; k < 100000; k++){
+		for (k = 0; k < TAMANHO; k++){
 			fprintf (pWrite, "Ano: %s        Edicao: %d\n", vetorEdicoes[k].ano, vetorEdicoes[k].numeroEdicoes );
 		}
 
 		printf ("Total de Livros: %d\n", contadorLivrosTotal); 
 
-		for (k=0; k < 100000; k++){
+		for (k=0; k < TAMANHO; k++){
 			if ( vetorEdicoes[k].numeroEdicoes > maiorNumeroEdicoes){
 			strcpy (maiorAno, vetorEdicoes[k].ano);
 			maiorNumeroEdicoes = vetorEdicoes[k].numeroEdicoes;
@@ -244,14 +246,14 @@
 		struct livro *passarVetorLivros = separaLivros();
 		  
 		struct autores *vetorAutoresSHM;
-		shmidAutores = shmget(key, 2000000 * sizeof(struct livro), IPC_CREAT | 0600 );
+		shmidAutores = shmget(key, TAMANHO * sizeof(struct livro), IPC_CREAT | 0700 );
 		vetorAutoresSHM = shmat(shmidAutores, 0, 0); 
 		
-		if ( ( shmid = shmget (key, 2000000 * sizeof(struct livro), IPC_CREAT | 0600)) < 0 )
-			printf("FAlha na Memoria Compartilhada\n");
+		if ( ( shmid = shmget (key, TAMANHO * sizeof(struct livro), IPC_CREAT | 0700)) < 0 )
+			printf("Falha na Memoria Compartilhada\n");
 
 		 
-		   separaAutores(passarVetorLivros, vetorAutoresSHM, 0, 50000);
+		   separaAutores(passarVetorLivros, vetorAutoresSHM, 0, 1000);
 		   pid = fork();
 		   if (pid > 0){
 				pid = fork();
@@ -259,7 +261,7 @@
 				if (pid > 0){
 					pid = fork();
 					if (pid >0){
-						separaAutores(passarVetorLivros,vetorAutoresSHM, 50001, 100000);   
+						separaAutores(passarVetorLivros,vetorAutoresSHM, 1001, 2000);   
 						wait(NULL);
 						wait(NULL);
 						wait(NULL);
@@ -267,14 +269,14 @@
 						separaEdicoes(passarVetorLivros);
 								
 					}
-					else separaAutores(passarVetorLivros,vetorAutoresSHM, 100001, 150000);			     		
+					else separaAutores(passarVetorLivros,vetorAutoresSHM, 2001, 3000);			     		
 				}
-				else separaAutores(passarVetorLivros,vetorAutoresSHM, 150001, 200000);
+				else separaAutores(passarVetorLivros,vetorAutoresSHM, 3001, 5000);
 			}
 			else {
 				pWrite = fopen ("autoresFork.txt", "w");
 			
-				for (k = 0; k < 200000; k++){
+				for (k = 0; k < TAMANHO; k++){
 					 fprintf (pWrite, "Autor: %s           Quantidade: %d\n", vetorAutoresSHM[k].nome, vetorAutoresSHM[k].quantidade );
 				}
 		   }
